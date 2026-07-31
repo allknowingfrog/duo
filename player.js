@@ -8,16 +8,21 @@ class Player extends EngineObject {
     this.keys = keys
 
     // world units per frame
-    this.speed = 0.06
+    this.topSpeed = 0.06
+    this.acceleration = 0.006
+    this.driveDamping = 1 - this.acceleration / (this.topSpeed + this.acceleration)
+    this.brakeDamping = 1 - (1 - this.driveDamping) * 1.5
 
     // only collide with solid objects
     this.setCollision(true, false, false, false)
   }
 
   update() {
-    const dir = keyDirection(...this.keys)
+    // clampLength calculates diagonal movement (instead of applying both axes)
+    const dir = keyDirection(...this.keys).clampLength(1)
 
-    // calculate diagonal movement instead of applying both axes
-    this.velocity = dir.clampLength(1).scale(this.speed)
+    this.damping = dir.length() ? this.driveDamping : this.brakeDamping
+
+    this.applyAcceleration(dir.scale(this.acceleration))
   }
 }
