@@ -22,9 +22,9 @@ const levelSize = vec2(levelRows[0].length, levelRows.length)
 const minSpawnDistance = 6
 
 // in seconds
-const startingTime = 13
-const timeReduction = 0.25
-const minimumTime = 4
+const startingTime = 15
+const timeReduction = 0.5
+const minimumTime = 0
 
 const startingLives = 3
 
@@ -51,8 +51,10 @@ function roundComplete() {
   return buttons.every(button => button.isOccupied())
 }
 
-function roundTime() {
-  return max(minimumTime, startingTime - score * timeReduction)
+function extendTimer(amount) {
+  const spare = max(0, -roundTimer.get())
+
+  roundTimer.set(spare + amount)
 }
 
 function startRound() {
@@ -85,9 +87,7 @@ function startRound() {
 
   previousSpawns = taken
 
-  const spare = max(0, -roundTimer.get())
-
-  roundTimer.set(spare + roundTime())
+  extendTimer(max(minimumTime, startingTime - score * timeReduction))
 }
 
 function startRun() {
@@ -97,6 +97,7 @@ function startRun() {
 
   setPaused(false)
   startRound()
+  startMusic()
 }
 
 function gameInit() {
@@ -133,12 +134,19 @@ function gameInit() {
 }
 
 function gameUpdate() {
+  updateMusic(score)
+
   if (roundComplete()) {
     score++
 
+    playPass()
     startRound()
   } else if (roundTimer.elapsed()) {
     lives--
+
+    extendTimer(lives * 5)
+
+    playFail()
 
     if (lives > 0) {
       startRound()
@@ -185,7 +193,7 @@ function gameRenderPost() {
     return
   }
 
-  drawTextScreen(max(0, -roundTimer.get()).toFixed(1), vec2(center, 40), 40)
+  drawTextScreen(ceil(max(0, -roundTimer.get())).toString(), vec2(center, 40), 40)
   drawTextScreen(`SCORE ${score}`, vec2(100, 40), 24)
   drawTextScreen(`LIVES ${lives}`, vec2(mainCanvasSize.x - 100, 40), 24)
 

@@ -13,8 +13,8 @@ class Player extends EngineObject {
     this.driveDamping = 1 - this.acceleration / (this.topSpeed + this.acceleration)
     this.brakeDamping = 1 - (1 - this.driveDamping) * 1.5
 
-    // only collide with solid objects
-    this.setCollision(true, false, false, false)
+    // collide with walls and each other
+    this.setCollision(true, true, false, false)
   }
 
   update() {
