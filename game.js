@@ -26,8 +26,6 @@ const startingTime = 15
 const timeReduction = 0.5
 const minimumTime = 0
 
-const startingLives = 3
-
 const players = []
 const buttons = []
 const spawnVecs = []
@@ -36,7 +34,6 @@ const spawnVecs = []
 let previousSpawns = []
 
 let score = 0
-let lives = startingLives
 
 // "splash", "playing", or "over"
 let gameState = "splash"
@@ -49,12 +46,6 @@ function tileCenter(x, y) {
 
 function roundComplete() {
   return buttons.every(button => button.isOccupied())
-}
-
-function extendTimer(amount) {
-  const spare = max(0, -roundTimer.get())
-
-  roundTimer.set(spare + amount)
 }
 
 function startRound() {
@@ -87,12 +78,15 @@ function startRound() {
 
   previousSpawns = taken
 
-  extendTimer(max(minimumTime, startingTime - score * timeReduction))
+
+  const remaining = max(0, -roundTimer.get())
+  const bonus = max(minimumTime, startingTime - score * timeReduction)
+
+  roundTimer.set(remaining + bonus)
 }
 
 function startRun() {
   score = 0
-  lives = startingLives
   gameState = "playing"
 
   setPaused(false)
@@ -142,19 +136,11 @@ function gameUpdate() {
     playPass()
     startRound()
   } else if (roundTimer.elapsed()) {
-    lives--
-
-    extendTimer(lives * 5)
-
     playFail()
 
-    if (lives > 0) {
-      startRound()
-    } else {
-      gameState = "over"
+    gameState = "over"
 
-      setPaused(true)
-    }
+    setPaused(true)
   }
 }
 
@@ -195,7 +181,6 @@ function gameRenderPost() {
 
   drawTextScreen(ceil(max(0, -roundTimer.get())).toString(), vec2(center, 40), 40)
   drawTextScreen(`SCORE ${score}`, vec2(100, 40), 24)
-  drawTextScreen(`LIVES ${lives}`, vec2(mainCanvasSize.x - 100, 40), 24)
 
   if (getPaused()) {
     drawTextScreen("PAUSED", vec2(center, 85), 24)
