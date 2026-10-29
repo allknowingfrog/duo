@@ -108,9 +108,9 @@ function gameInit() {
       } else if (char === "X") {
         spawnVecs.push(tileCenter(x, y))
       } else if (char === "1") {
-        players[0] = new Player(tileCenter(x, y), hsl(0.6, 1, 0.65), ["KeyW", "KeyS", "KeyA", "KeyD"])
+        players[0] = new Player(tileCenter(x, y), hsl(0.6, 1, 0.65), ["KeyW", "KeyS", "KeyA", "KeyD"], 0)
       } else if (char === "2") {
-        players[1] = new Player(tileCenter(x, y), hsl(0.33, 0.6, 0.45), ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"])
+        players[1] = new Player(tileCenter(x, y), hsl(0.33, 0.6, 0.45), ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"], 1)
       }
     }
   }
@@ -144,9 +144,14 @@ function gameUpdate() {
   }
 }
 
+function startPressed() {
+  // 9 is Start in the standard gamepad mapping
+  return keyWasPressed("Space") || gamepadWasPressed(9, 0) || gamepadWasPressed(9, 1)
+}
+
 function gameUpdatePost() {
-  // gameUpdate is skipped while paused, so space has to be read here
-  if (!keyWasPressed("Space")) {
+  // gameUpdate is skipped while paused, so start has to be read here
+  if (!startPressed()) {
     return
   }
 
@@ -166,15 +171,15 @@ function gameRenderPost() {
 
   if (gameState === "splash") {
     drawTextScreen("DUO", vec2(center, 40), 40)
-    drawTextScreen("WASD  /  ARROWS", vec2(center, 85), 24)
-    drawTextScreen("SPACE TO START", vec2(center, 125), 24)
+    drawTextScreen("RIGHT STICK  /  WASD  /  ARROWS", vec2(center, 85), 24)
+    drawTextScreen("START OR SPACE TO BEGIN", vec2(center, 125), 24)
 
     return
   }
 
   if (gameState === "over") {
     drawTextScreen(`GAME OVER - SCORE ${score}`, vec2(center, 40), 40)
-    drawTextScreen(`SPACE TO RESTART`, vec2(center, 85), 24)
+    drawTextScreen("START OR SPACE TO RESTART", vec2(center, 85), 24)
 
     return
   }
