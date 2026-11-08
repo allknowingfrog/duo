@@ -3,7 +3,7 @@
 // a pad that starts a game mode when every player is touching it at once
 class Trigger extends EngineObject {
   constructor(pos, size, mode) {
-    super(pos, size, undefined, 0, WHITE, -1)
+    super(pos, size, undefined, 0, hsl(0.08, 1, 0.7), -1)
 
     this.mode = mode
 
@@ -23,6 +23,6 @@ class Trigger extends EngineObject {
   render() {
     const fill = this.touching().length / players.length
 
-    drawCircle(this.pos, this.size.x, WHITE.withAlpha(fill * 0.5), 0.15, WHITE)
+    drawCircle(this.pos, this.size.x, this.color.withAlpha(fill * 0.5), 0.15, this.color)
   }
 }

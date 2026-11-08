@@ -21,6 +21,11 @@ class Player extends EngineObject {
   }
 
   boost() {
+    // called every frame while on the pickup, so only ding on the way in
+    if (!this.boostTimer.active()) {
+      playBoost()
+    }
+
     this.boostTimer.set(boostDuration)
   }
 

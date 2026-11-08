@@ -11,6 +11,9 @@ const bass = new Sound([0.5, 0, 165, 0, 0.18, 0.25])
 // repeatTime, noise
 const failSound = new Sound([0.6, 0, 300, 0.01, 0.25, 0.6, 0, 0, -0.6, 0, 0, 0, 0, 0.3])
 
+// a sawtooth sweeping up: shape 2 is the buzz, slide is the zip
+const boostSound = new Sound([0.4, 0, 220, 0, 0.15, 0.12, 2, 1, 0.8])
+
 // minor pentatonic phrases, null is a rest
 const phrases = [
   [0, null, 3, null, 5, null, 3, null],
@@ -48,6 +51,10 @@ function playPass() {
 function playFail() {
   failSound.play()
   playChord(0, [0, 6], 0.6)
+}
+
+function playBoost() {
+  boostSound.play()
 }
 
 function startMusic() {
