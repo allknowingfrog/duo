@@ -20,7 +20,10 @@ class Player extends EngineObject {
 
   update() {
     // clampLength calculates diagonal movement (instead of applying both axes)
-    const dir = keyDirection(...this.keys).add(gamepadStick(1, this.pad)).clampLength(1)
+    const dir = keyDirection(...this.keys)
+      .add(gamepadStick(0, this.pad))
+      .add(gamepadStick(1, this.pad))
+      .clampLength(1)
 
     this.damping = dir.length() ? this.driveDamping : this.brakeDamping
 

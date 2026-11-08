@@ -26,17 +26,21 @@ const startingTime = 15
 const timeReduction = 0.5
 const minimumTime = 0
 
+const saveName = "duo"
+
 const players = []
 const buttons = []
+const triggers = []
 const spawnVecs = []
 
 // each spawn is an index in spawnVecs
 let previousSpawns = []
 
 let score = 0
+let best = 0
 
-// "splash", "playing", or "over"
-let gameState = "splash"
+// null while idle; a mode has begin, update, and end
+let activeMode = null
 
 const roundTimer = new Timer()
 
@@ -78,25 +82,79 @@ function startRound() {
 
   previousSpawns = taken
 
-
   const remaining = max(0, -roundTimer.get())
   const bonus = max(minimumTime, startingTime - score * timeReduction)
 
   roundTimer.set(remaining + bonus)
 }
 
-function startRun() {
-  score = 0
-  gameState = "playing"
+const duoMode = {
+  begin() {
+    score = 0
 
-  setPaused(false)
-  startRound()
-  startMusic()
+    players.forEach(player => {
+      buttons.push(new Button(player))
+    })
+
+    startRound()
+    startMusic()
+  },
+
+  update() {
+    updateMusic(score)
+
+    if (roundComplete()) {
+      score++
+
+      playPass()
+      startRound()
+    } else if (roundTimer.elapsed()) {
+      playFail()
+      endMode()
+    }
+  },
+
+  end() {
+    buttons.forEach(button => button.destroy())
+    buttons.length = 0
+
+    roundTimer.unset()
+
+    best = max(best, score)
+    writeSaveData(saveName, { best })
+  },
+}
+
+function startMode(mode) {
+  triggers.forEach(trigger => trigger.destroy())
+  triggers.length = 0
+
+  activeMode = mode
+  activeMode.begin()
+}
+
+function endMode() {
+  activeMode.end()
+  activeMode = null
+
+  spawnTriggers()
+}
+
+function spawnTriggers() {
+  // the map's middle spawn
+  const center = tileCenter(floor(levelSize.x / 2), floor(levelSize.y / 2))
+
+  triggers.push(new Trigger(center, vec2(2.4), duoMode))
 }
 
 function gameInit() {
   // disable automatic mapping of WASD to arrow keys
   setInputWASDEmulateDirection(false)
+
+  // the Esc debug overlay still shows the stats line when open
+  setDebugWatermark(false)
+
+  best = readSaveData(saveName, { best: 0 }).best
 
   for (let row = 0; row < levelRows.length; row++) {
     for (let x = 0; x < levelRows[row].length; x++) {
@@ -115,50 +173,27 @@ function gameInit() {
     }
   }
 
-  players.forEach(player => {
-    buttons.push(new Button(player))
-  })
-
-  startRound()
+  spawnTriggers()
 
   setCameraPos(levelSize.scale(0.5))
   setCameraScale(40)
-
-  setPaused(true)
 }
 
 function gameUpdate() {
-  updateMusic(score)
-
-  if (roundComplete()) {
-    score++
-
-    playPass()
-    startRound()
-  } else if (roundTimer.elapsed()) {
-    playFail()
-
-    gameState = "over"
-
-    setPaused(true)
+  if (activeMode) {
+    activeMode.update()
   }
 }
 
-function startPressed() {
+function pausePressed() {
   // 9 is Start in the standard gamepad mapping
   return keyWasPressed("Space") || gamepadWasPressed(9, 0) || gamepadWasPressed(9, 1)
 }
 
 function gameUpdatePost() {
-  // gameUpdate is skipped while paused, so start has to be read here
-  if (!startPressed()) {
-    return
-  }
-
-  if (gameState === "playing") {
+  // gameUpdate is skipped while paused, so the toggle has to be read here
+  if (pausePressed()) {
     setPaused(!getPaused())
-  } else {
-    startRun()
   }
 }
 
@@ -169,23 +204,9 @@ function gameRender() {
 function gameRenderPost() {
   const center = mainCanvasSize.x / 2
 
-  if (gameState === "splash") {
-    drawTextScreen("DUO", vec2(center, 40), 40)
-    drawTextScreen("RIGHT STICK  /  WASD  /  ARROWS", vec2(center, 85), 24)
-    drawTextScreen("START OR SPACE TO BEGIN", vec2(center, 125), 24)
-
-    return
-  }
-
-  if (gameState === "over") {
-    drawTextScreen(`GAME OVER - SCORE ${score}`, vec2(center, 40), 40)
-    drawTextScreen("START OR SPACE TO RESTART", vec2(center, 85), 24)
-
-    return
-  }
-
   drawTextScreen(ceil(max(0, -roundTimer.get())).toString(), vec2(center, 40), 40)
   drawTextScreen(`SCORE ${score}`, vec2(100, 40), 24)
+  drawTextScreen(`BEST ${best}`, vec2(mainCanvasSize.x - 100, 40), 24)
 
   if (getPaused()) {
     drawTextScreen("PAUSED", vec2(center, 85), 24)
