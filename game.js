@@ -7,7 +7,7 @@ const levelRows = [
   '#......#.....#####...#...#....#',
   '########..#..#......#######..##',
   '#.........#.........#.........#',
-  '#....X....#....X....#....X....#',
+  '#....X....#....!....#....X....#',
   '#.........#.........#.........#',
   '##..#######......#..#..########',
   '#....#...#...#####.....#......#',
@@ -165,6 +165,8 @@ function gameInit() {
         new Wall(tileCenter(x, y))
       } else if (char === "X") {
         spawnVecs.push(tileCenter(x, y))
+      } else if (char === "!") {
+        new Boost(tileCenter(x, y))
       } else if (char === "1") {
         players[0] = new Player(tileCenter(x, y), hsl(0.6, 1, 0.65), ["KeyW", "KeyS", "KeyA", "KeyD"], 0)
       } else if (char === "2") {

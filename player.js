@@ -14,8 +14,14 @@ class Player extends EngineObject {
     this.driveDamping = 1 - this.acceleration / (this.topSpeed + this.acceleration)
     this.brakeDamping = 1 - (1 - this.driveDamping) * 1.5
 
+    this.boostTimer = new Timer()
+
     // collide with walls and each other
     this.setCollision(true, true, false, false)
+  }
+
+  boost() {
+    this.boostTimer.set(boostDuration)
   }
 
   update() {
@@ -27,6 +33,15 @@ class Player extends EngineObject {
 
     this.damping = dir.length() ? this.driveDamping : this.brakeDamping
 
-    this.applyAcceleration(dir.scale(this.acceleration))
+    // damping is unchanged, so scaling acceleration scales top speed with it
+    const acceleration = this.boostTimer.active() ? this.acceleration * boostFactor : this.acceleration
+
+    this.applyAcceleration(dir.scale(acceleration))
+  }
+
+  render() {
+    const color = this.boostTimer.active() ? this.color.lerp(WHITE, 0.4) : this.color
+
+    drawRect(this.pos, this.size, color)
   }
 }
